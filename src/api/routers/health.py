@@ -8,11 +8,18 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from fastapi import APIRouter
+from fastapi.responses import RedirectResponse
 
 from src.api.schemas import HealthResponse
 from src.core.config import get_settings
 
 router = APIRouter(tags=["health"])
+
+
+@router.get("/", include_in_schema=False)
+async def root() -> RedirectResponse:
+    """Redirect root path to interactive Swagger documentation."""
+    return RedirectResponse(url="/docs")
 
 
 @router.get(

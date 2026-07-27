@@ -24,10 +24,13 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 # Paths that bypass authentication.
 _AUTH_EXEMPT_PATHS: frozenset[str] = frozenset({
+    "",
+    "/",
     "/health",
     "/docs",
     "/redoc",
     "/openapi.json",
+    "/favicon.ico",
 })
 
 

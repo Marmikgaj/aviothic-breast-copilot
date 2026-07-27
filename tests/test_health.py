@@ -41,3 +41,10 @@ class TestHealthEndpoint:
         """Every response should include an X-Correlation-ID header."""
         response = await client.get("/health")
         assert "x-correlation-id" in response.headers
+
+    @pytest.mark.asyncio
+    async def test_root_redirects_to_docs(self, client: AsyncClient) -> None:
+        """GET / should redirect to /docs without requiring authentication."""
+        response = await client.get("/", follow_redirects=False)
+        assert response.status_code == 307
+        assert response.headers["location"] == "/docs"

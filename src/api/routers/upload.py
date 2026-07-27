@@ -15,8 +15,9 @@ import time
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, Depends, UploadFile
 
+from src.api.middleware import api_key_header
 from src.api.schemas import (
     ErrorDetail,
     ReportResult,
@@ -31,7 +32,11 @@ from src.ingestion.validator import validate_upload
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1", tags=["reports"])
+router = APIRouter(
+    prefix="/api/v1",
+    tags=["reports"],
+    dependencies=[Depends(api_key_header)],
+)
 
 # In-memory job store — Phase 1 simplification.
 # Keys are report_id strings, values are ReportStatusResponse dicts.

@@ -37,8 +37,11 @@ models/
 # Raw data — source reports/datasets, gitignored
 data/raw/
 
-# Runtime upload storage
+# Document files & uploads
+*.pdf
+*.docx
 uploads/
+test_uploads/
 
 # Generated client SDKs (auto-generated from OpenAPI schema)
 generated/

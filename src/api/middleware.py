@@ -11,12 +11,16 @@ from typing import Callable
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
+from fastapi.security import APIKeyHeader
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from src.core.config import get_settings
 from src.core.logging import correlation_id_ctx, get_logger
 
 logger = get_logger(__name__)
+
+# OpenAPI security scheme definition for Swagger UI
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 # Paths that bypass authentication.
 _AUTH_EXEMPT_PATHS: frozenset[str] = frozenset({

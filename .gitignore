@@ -1,0 +1,60 @@
+# ============================================================================
+# Aviothic Breast Cancer Report Copilot — .gitignore
+# ============================================================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# ---------- Virtual environments ----------
+.venv/
+venv/
+env/
+
+# ---------- IDE ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---------- Environment / secrets ----------
+.env
+.env.local
+.env.production
+
+# ---------- Project-specific (per Architecture.md / Rules.md §10) ----------
+# Fine-tuned model weights — versioned via DVC/artifact storage, not git
+models/
+
+# Raw data — source reports/datasets, gitignored
+data/raw/
+
+# Runtime upload storage
+uploads/
+
+# Generated client SDKs (auto-generated from OpenAPI schema)
+generated/
+
+# ---------- Testing ----------
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# ---------- Docker ----------
+*.log
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+
+# ---------- uv ----------
+# Keep uv.lock in version control for reproducible builds

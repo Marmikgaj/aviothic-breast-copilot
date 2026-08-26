@@ -19,6 +19,7 @@ from src.core.exceptions import AviothicError, aviothic_error_handler, unhandled
 from src.core.logging import get_logger, setup_logging
 
 
+# pyrefly: ignore [deprecated]
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan: startup and shutdown hooks."""

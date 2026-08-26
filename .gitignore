@@ -37,11 +37,16 @@ models/
 # Raw data — source reports/datasets, gitignored
 data/raw/
 
-# Document files & uploads
+# ---------- Document files & uploads ----------
 *.pdf
 *.docx
+!samples/*.pdf
 uploads/
 test_uploads/
+
+# ---------- Tool / Analysis Artifacts ----------
+graphify-out/
+.gemini/
 
 # Generated client SDKs (auto-generated from OpenAPI schema)
 generated/
@@ -58,6 +63,9 @@ htmlcov/
 # ---------- OS ----------
 .DS_Store
 Thumbs.db
+
+# ---------- Private Agent Tooling ----------
+.agents/
 
 # ---------- uv ----------
 # Keep uv.lock in version control for reproducible builds

@@ -8,9 +8,11 @@ from __future__ import annotations
 import time
 
 from src.api.schemas import ReportConfidence, ReportResult
-from src.core.exceptions import FileProcessingError
+from src.core.exceptions import FileProcessingError, OcrUnavailableError
 from src.core.logging import get_logger
+from src.extraction.engine import extract_entities
 from src.ingestion.date_extractor import detect_report_date
+from src.ingestion.ocr_engine import OcrResult, perform_ocr
 from src.ingestion.pdf_extractor import extract_text
 from src.ingestion.report_classifier import detect_report_type
 from src.ingestion.text_cleaner import clean_text
@@ -49,16 +51,44 @@ async def process_report(*, report_id: str, content: bytes, filename: str) -> Re
     except Exception as exc:
         raise FileProcessingError(f"PDF text extraction failed: {exc}") from exc
 
-    # Handle likely-scanned documents.
+    # Handle likely-scanned documents — attempt OCR fallback.
+    ocr_warning: str | None = None
+    ocr_result: OcrResult | None = None
+
     if extraction_result.is_scanned_likely:
-        logger.warning(
-            "Document appears to be scanned — OCR not yet supported (Phase 2)",
-            report_id=report_id,
-        )
+        try:
+            ocr_result = perform_ocr(content)
+            logger.info(
+                "OCR fallback succeeded",
+                report_id=report_id,
+                confidence=ocr_result.confidence,
+                text_length=len(ocr_result.text),
+            )
+            if ocr_result.confidence < 0.5:
+                ocr_warning = (
+                    f"OCR confidence is low ({ocr_result.confidence:.0%}) — "
+                    "review extracted text manually before clinical use."
+                )
+                logger.warning(
+                    "Low OCR confidence",
+                    report_id=report_id,
+                    confidence=ocr_result.confidence,
+                )
+        except OcrUnavailableError:
+            ocr_warning = (
+                "Tesseract OCR is not installed. Scanned document could not be processed — "
+                "install tesseract-ocr and retry for full text extraction."
+            )
+            logger.warning(
+                "OCR unavailable — Tesseract not installed",
+                report_id=report_id,
+            )
 
     # --- Step 2: Text cleaning ---
+    # Use OCR text if the document was scanned and OCR succeeded.
+    source_text = ocr_result.text if ocr_result is not None else extraction_result.raw_text
     try:
-        cleaned_text = clean_text(extraction_result.raw_text)
+        cleaned_text = clean_text(source_text)
     except Exception as exc:
         raise FileProcessingError(f"Text cleaning failed: {exc}") from exc
 
@@ -78,8 +108,28 @@ async def process_report(*, report_id: str, content: bytes, filename: str) -> Re
         report_date = None
         date_confidence = "low"
 
-    # --- Step 5: Assemble result ---
+    # --- Step 5: Clinical Entity Extraction (Phase 3) ---
+    try:
+        entities = extract_entities(cleaned_text)
+    except Exception as exc:
+        logger.exception("Clinical entity extraction failed", report_id=report_id)
+        entities = None
+
+    # --- Step 6: Assemble result ---
     elapsed_ms = (time.monotonic() - start_time) * 1000
+
+    # Derive text_extraction confidence: OCR result overrides the PDF extractor
+    # confidence when OCR was used, otherwise keep the PDF extractor's confidence.
+    if ocr_result is not None:
+        # Map float confidence to literal tier.
+        if ocr_result.confidence >= 0.75:
+            text_extraction_confidence = "high"
+        elif ocr_result.confidence >= 0.5:
+            text_extraction_confidence = "medium"
+        else:
+            text_extraction_confidence = "low"
+    else:
+        text_extraction_confidence = extraction_result.confidence
 
     result = ReportResult(
         report_id=report_id,
@@ -90,11 +140,13 @@ async def process_report(*, report_id: str, content: bytes, filename: str) -> Re
         text_length=len(cleaned_text),
         processing_time_ms=round(elapsed_ms, 2),
         confidence=ReportConfidence(
-            text_extraction=extraction_result.confidence,
+            text_extraction=text_extraction_confidence,
             report_type_detection=type_confidence,
             report_date_detection=date_confidence,
         ),
         is_scanned_likely=extraction_result.is_scanned_likely,
+        ocr_warning=ocr_warning,
+        entities=entities,
     )
 
     logger.info(

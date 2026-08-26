@@ -72,6 +72,17 @@ class FileProcessingError(AviothicError):
         super().__init__(detail, status_code=500, error_code="FILE_PROCESSING_ERROR")
 
 
+class OcrUnavailableError(AviothicError):
+    """Raised when the Tesseract OCR binary is not installed or not on PATH."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Tesseract OCR binary not found. Install tesseract-ocr to process scanned documents.",
+            status_code=503,
+            error_code="OCR_UNAVAILABLE",
+        )
+
+
 class AuthenticationError(AviothicError):
     """Raised when authentication fails (missing or invalid API key)."""
 

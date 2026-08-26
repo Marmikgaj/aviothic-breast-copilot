@@ -45,6 +45,94 @@ class ReportConfidence(BaseModel):
 
 
 # ============================================================================
+# Clinical Entity Extraction Models (Phase 3)
+# ============================================================================
+
+
+class SourceSpan(BaseModel):
+    """Source text character offsets for 100% auditable clinical claims (Rules.md §3)."""
+
+    start_char: int = Field(..., ge=0, description="Start character offset in raw_text.")
+    end_char: int = Field(..., ge=0, description="End character offset in raw_text.")
+    snippet: str = Field(..., description="Exact string snippet extracted from the source text.")
+
+
+class BiradsEntity(BaseModel):
+    """Extracted BI-RADS assessment entity."""
+
+    category: str = Field(..., description="BI-RADS category: 0, 1, 2, 3, 4, 4A, 4B, 4C, 5, or 6.")
+    descriptor: str | None = Field(None, description="Category descriptor narrative (e.g., 'Low Suspicion for Malignancy').")
+    side: Literal["left", "right", "bilateral", "unspecified"] = Field(
+        "unspecified", description="Breast side associated with assessment."
+    )
+    span: SourceSpan = Field(..., description="Source text character span.")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Extraction confidence score.")
+
+
+class TnmEntity(BaseModel):
+    """Extracted TNM staging entity."""
+
+    raw_stage: str = Field(..., description="Full raw TNM stage string (e.g., 'pT1c N0 M0').")
+    t_stage: str | None = Field(None, description="Primary tumor stage (e.g., 'pTis', 'pT1c', 'T2').")
+    n_stage: str | None = Field(None, description="Regional lymph node stage (e.g., 'N0', 'pN1a').")
+    m_stage: str | None = Field(None, description="Distant metastasis stage (e.g., 'M0', 'pM1').")
+    is_pathological: bool = Field(True, description="True if pathological (pTNM), False if clinical (cTNM).")
+    span: SourceSpan = Field(..., description="Source text character span.")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Extraction confidence score.")
+
+
+class BiomarkerEntity(BaseModel):
+    """Extracted immunohistochemistry (IHC) / FISH biomarker entity."""
+
+    name: Literal["ER", "PR", "HER2", "Ki-67"] = Field(..., description="Biomarker target name.")
+    status: Literal["positive", "negative", "equivocal", "unknown"] = Field(
+        ..., description="Qualitative biomarker status."
+    )
+    percentage: float | None = Field(None, ge=0.0, le=100.0, description="Quantitative percentage (e.g., 90% for ER/PR/Ki-67).")
+    intensity: Literal["strong", "moderate", "weak", "none", "unknown"] = Field(
+        "unknown", description="Staining intensity narrative."
+    )
+    ihc_score: str | None = Field(None, description="HER2 IHC score (e.g., '0', '1+', '2+', '3+').")
+    fish_status: Literal["amplified", "non-amplified", "equivocal", "not_performed"] = Field(
+        "not_performed", description="HER2 FISH gene amplification status."
+    )
+    span: SourceSpan = Field(..., description="Source text character span.")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Extraction confidence score.")
+
+
+class TumorDimensionEntity(BaseModel):
+    """Extracted tumor dimension, size, and anatomical location entity."""
+
+    primary_size_mm: float | None = Field(None, ge=0.0, description="Largest primary tumor dimension in millimeters.")
+    dimensions_mm: list[float] = Field(default_factory=list, description="All measured dimensions in mm (up to 3D).")
+    location_quadrant: str | None = Field(None, description="Quadrant location (e.g., 'upper outer quadrant').")
+    clock_position: str | None = Field(None, description="Clock position (e.g., '10 o'clock').")
+    span: SourceSpan = Field(..., description="Source text character span.")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Extraction confidence score.")
+
+
+class LymphNodeEntity(BaseModel):
+    """Extracted axillary / sentinel lymph node status entity."""
+
+    nodes_examined: int | None = Field(None, ge=0, description="Total number of lymph nodes examined.")
+    nodes_positive: int | None = Field(None, ge=0, description="Number of lymph nodes positive for metastasis.")
+    sentinel_status: bool | None = Field(None, description="True if sentinel lymph node biopsy, False if axillary dissection.")
+    extranodal_extension: bool | None = Field(None, description="Presence of extranodal extension.")
+    span: SourceSpan = Field(..., description="Source text character span.")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Extraction confidence score.")
+
+
+class ExtractedEntities(BaseModel):
+    """Structured container holding all extracted clinical entities for a report."""
+
+    birads: list[BiradsEntity] = Field(default_factory=list, description="Extracted BI-RADS assessment entities.")
+    tnm_staging: list[TnmEntity] = Field(default_factory=list, description="Extracted TNM staging entities.")
+    biomarkers: list[BiomarkerEntity] = Field(default_factory=list, description="Extracted biomarker entities.")
+    tumor_dimensions: list[TumorDimensionEntity] = Field(default_factory=list, description="Extracted tumor dimension entities.")
+    lymph_nodes: list[LymphNodeEntity] = Field(default_factory=list, description="Extracted lymph node entities.")
+
+
+# ============================================================================
 # Report Result
 # ============================================================================
 
@@ -65,7 +153,15 @@ class ReportResult(BaseModel):
     confidence: ReportConfidence = Field(..., description="Confidence scores for each extraction step.")
     is_scanned_likely: bool = Field(
         False,
-        description="True if the document appears to be scanned/image-based and may need OCR (not yet supported).",
+        description="True if the document appears to be scanned/image-based.",
+    )
+    ocr_warning: str | None = Field(
+        None,
+        description="Warning message when OCR confidence is low or Tesseract is unavailable.",
+    )
+    entities: ExtractedEntities | None = Field(
+        None,
+        description="Extracted clinical entities (BI-RADS, TNM, biomarkers, tumor dimensions, lymph nodes).",
     )
 
 

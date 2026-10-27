@@ -1,5 +1,6 @@
-"""Tumor dimension & anatomical location parser — extracts lesion sizes, 3D measurements, quadrants, clock positions, and source spans.
+"""Tumor dimension & anatomical location parser.
 
+Extracts lesion sizes, 3D measurements, quadrants, clock positions, and source spans.
 Per AGENTS.md §1 & Rules.md §3, extraction is deterministic and fully auditable.
 """
 
@@ -18,10 +19,20 @@ _DIMENSION_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-_SINGLE_SIZE_PATTERN = re.compile(
-    r"\b(\d+(?:\.\d+)?)\s*(cm|mm)\s+(?:mass|lesion|nodule|tumor|calcifications|area)\b",
-    re.IGNORECASE,
-)
+_SINGLE_SIZE_PATTERNS = [
+    re.compile(
+        r"\b(\d+(?:\.\d+)?)\s*(cm|mm)\s+(?:[\w-]+\s+){0,3}(?:mass|lesion|nodule|tumor|cyst|calcifications|area)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bmeasuring\s+(\d+(?:\.\d+)?)\s*(cm|mm)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:greatest\s+)?dimension\s+(?:of\s+[\w\s-]{1,25}\s+)?(?:is\s+|measuring\s+)?(\d+(?:\.\d+)?)\s*(cm|mm)\b",
+        re.IGNORECASE,
+    ),
+]
 
 # Location patterns
 _QUADRANT_PATTERN = re.compile(
@@ -33,6 +44,11 @@ _CLOCK_PATTERN = re.compile(
     r"\b([1-9]|1[0-2])\s*o['’]?clock(?:\s+position)?\b",
     re.IGNORECASE,
 )
+
+
+def _spans_overlap(s1: int, e1: int, s2: int, e2: int) -> bool:
+    """Check if two half-open spans [s1, e1) and [s2, e2) overlap."""
+    return not (e1 <= s2 or s1 >= e2)
 
 
 def parse_tumor_dimensions(text: str) -> list[TumorDimensionEntity]:
@@ -86,39 +102,40 @@ def parse_tumor_dimensions(text: str) -> list[TumorDimensionEntity]:
             )
         )
 
-    # 2. Parse single dimension pattern (e.g. 1.4 cm mass) if not overlapping multi-dimensional match
-    for match in _SINGLE_SIZE_PATTERN.finditer(text):
-        start_char, end_char = match.span()
+    # 2. Parse single dimension patterns
+    for pattern in _SINGLE_SIZE_PATTERNS:
+        for match in pattern.finditer(text):
+            start_char, end_char = match.span()
 
-        # Skip if already captured in a multi-dimensional span
-        if any(e.span.start_char <= start_char and end_char <= e.span.end_char for e in entities):
-            continue
+            # Skip if overlapping any existing entity span
+            if any(_spans_overlap(start_char, end_char, e.span.start_char, e.span.end_char) for e in entities):
+                continue
 
-        snippet = match.group(0).strip()
-        val = float(match.group(1))
-        unit = match.group(2).lower()
-        size_mm = round(val * 10.0 if unit == "cm" else val, 1)
+            snippet = match.group(0).strip()
+            val = float(match.group(1))
+            unit = match.group(2).lower()
+            size_mm = round(val * 10.0 if unit == "cm" else val, 1)
 
-        context_start = max(0, start_char - 100)
-        context_end = min(len(text), end_char + 100)
-        context_text = text[context_start:context_end]
+            context_start = max(0, start_char - 100)
+            context_end = min(len(text), end_char + 100)
+            context_text = text[context_start:context_end]
 
-        quad_match = _QUADRANT_PATTERN.search(context_text)
-        quadrant = quad_match.group(0).strip() if quad_match else None
+            quad_match = _QUADRANT_PATTERN.search(context_text)
+            quadrant = quad_match.group(0).strip() if quad_match else None
 
-        clock_match = _CLOCK_PATTERN.search(context_text)
-        clock_pos = clock_match.group(0).strip() if clock_match else None
+            clock_match = _CLOCK_PATTERN.search(context_text)
+            clock_pos = clock_match.group(0).strip() if clock_match else None
 
-        entities.append(
-            TumorDimensionEntity(
-                primary_size_mm=size_mm,
-                dimensions_mm=[size_mm],
-                location_quadrant=quadrant,
-                clock_position=clock_pos,
-                span=SourceSpan(start_char=start_char, end_char=end_char, snippet=snippet),
-                confidence=0.90,
+            entities.append(
+                TumorDimensionEntity(
+                    primary_size_mm=size_mm,
+                    dimensions_mm=[size_mm],
+                    location_quadrant=quadrant,
+                    clock_position=clock_pos,
+                    span=SourceSpan(start_char=start_char, end_char=end_char, snippet=snippet),
+                    confidence=0.90,
+                )
             )
-        )
 
     logger.debug("Tumor dimensions parsing complete", count=len(entities))
     return entities

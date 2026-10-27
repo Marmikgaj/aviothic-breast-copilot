@@ -1,4 +1,3 @@
-
 """Application exception hierarchy and FastAPI exception handlers.
 
 Fail loud in development, fail soft in production (Rules.md §4).

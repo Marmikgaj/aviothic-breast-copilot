@@ -5,11 +5,9 @@ All API payloads are validated through these models (Rules.md §5).
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
-
 
 # ============================================================================
 # Shared / Nested Models
@@ -61,7 +59,9 @@ class BiradsEntity(BaseModel):
     """Extracted BI-RADS assessment entity."""
 
     category: str = Field(..., description="BI-RADS category: 0, 1, 2, 3, 4, 4A, 4B, 4C, 5, or 6.")
-    descriptor: str | None = Field(None, description="Category descriptor narrative (e.g., 'Low Suspicion for Malignancy').")
+    descriptor: str | None = Field(
+        None, description="Category descriptor narrative (e.g., 'Low Suspicion for Malignancy')."
+    )
     side: Literal["left", "right", "bilateral", "unspecified"] = Field(
         "unspecified", description="Breast side associated with assessment."
     )
@@ -88,7 +88,9 @@ class BiomarkerEntity(BaseModel):
     status: Literal["positive", "negative", "equivocal", "unknown"] = Field(
         ..., description="Qualitative biomarker status."
     )
-    percentage: float | None = Field(None, ge=0.0, le=100.0, description="Quantitative percentage (e.g., 90% for ER/PR/Ki-67).")
+    percentage: float | None = Field(
+        None, ge=0.0, le=100.0, description="Quantitative percentage (e.g., 90% for ER/PR/Ki-67)."
+    )
     intensity: Literal["strong", "moderate", "weak", "none", "unknown"] = Field(
         "unknown", description="Staining intensity narrative."
     )
@@ -116,7 +118,9 @@ class LymphNodeEntity(BaseModel):
 
     nodes_examined: int | None = Field(None, ge=0, description="Total number of lymph nodes examined.")
     nodes_positive: int | None = Field(None, ge=0, description="Number of lymph nodes positive for metastasis.")
-    sentinel_status: bool | None = Field(None, description="True if sentinel lymph node biopsy, False if axillary dissection.")
+    sentinel_status: bool | None = Field(
+        None, description="True if sentinel lymph node biopsy, False if axillary dissection."
+    )
     extranodal_extension: bool | None = Field(None, description="Presence of extranodal extension.")
     span: SourceSpan = Field(..., description="Source text character span.")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Extraction confidence score.")
@@ -128,7 +132,9 @@ class ExtractedEntities(BaseModel):
     birads: list[BiradsEntity] = Field(default_factory=list, description="Extracted BI-RADS assessment entities.")
     tnm_staging: list[TnmEntity] = Field(default_factory=list, description="Extracted TNM staging entities.")
     biomarkers: list[BiomarkerEntity] = Field(default_factory=list, description="Extracted biomarker entities.")
-    tumor_dimensions: list[TumorDimensionEntity] = Field(default_factory=list, description="Extracted tumor dimension entities.")
+    tumor_dimensions: list[TumorDimensionEntity] = Field(
+        default_factory=list, description="Extracted tumor dimension entities."
+    )
     lymph_nodes: list[LymphNodeEntity] = Field(default_factory=list, description="Extracted lymph node entities.")
 
 
@@ -174,9 +180,7 @@ class UploadResponse(BaseModel):
     """Response returned immediately after a report upload is accepted."""
 
     report_id: str = Field(..., description="Unique identifier assigned to this report.")
-    status: Literal["processing", "completed", "failed"] = Field(
-        ..., description="Current processing status."
-    )
+    status: Literal["processing", "completed", "failed"] = Field(..., description="Current processing status.")
     message: str = Field(..., description="Human-readable status message.")
 
 
@@ -189,9 +193,7 @@ class ReportStatusResponse(BaseModel):
     """Response for the report status polling endpoint."""
 
     report_id: str = Field(..., description="Unique identifier for this report.")
-    status: Literal["processing", "completed", "failed"] = Field(
-        ..., description="Current processing status."
-    )
+    status: Literal["processing", "completed", "failed"] = Field(..., description="Current processing status.")
     result: ReportResult | None = Field(None, description="Processing result (present when status is 'completed').")
     error: ErrorDetail | None = Field(None, description="Error details (present when status is 'failed').")
 

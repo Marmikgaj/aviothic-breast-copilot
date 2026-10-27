@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import Callable
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -23,15 +22,17 @@ logger = get_logger(__name__)
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 # Paths that bypass authentication.
-_AUTH_EXEMPT_PATHS: frozenset[str] = frozenset({
-    "",
-    "/",
-    "/health",
-    "/docs",
-    "/redoc",
-    "/openapi.json",
-    "/favicon.ico",
-})
+_AUTH_EXEMPT_PATHS: frozenset[str] = frozenset(
+    {
+        "",
+        "/",
+        "/health",
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        "/favicon.ico",
+    }
+)
 
 
 class CorrelationIdMiddleware(BaseHTTPMiddleware):

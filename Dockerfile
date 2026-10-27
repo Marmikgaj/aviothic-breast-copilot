@@ -23,6 +23,13 @@ COPY src/ ./src/
 # --------------- Stage 2: Runtime ---------------
 FROM python:3.12-slim AS runtime
 
+# Install system dependencies for OCR and PDF handling
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
 # Security: run as non-root user
 RUN groupadd --gid 1001 aviothic \
     && useradd --uid 1001 --gid aviothic --shell /bin/bash --create-home aviothic

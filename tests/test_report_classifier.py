@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from src.ingestion.report_classifier import detect_report_type
 
 

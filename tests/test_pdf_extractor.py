@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from src.ingestion.pdf_extractor import ExtractionResult, extract_text
 
 
@@ -38,8 +36,7 @@ class TestPdfExtractor:
         pdf.add_page()
         # Add a tiny colored rectangle instead of text.
         pdf.set_fill_color(200, 200, 200)
-        pdf.rect(10, 10, 50, 50, style="F")
-        content = pdf.output()
+        content = bytes(pdf.output())
 
         result = extract_text(content)
 

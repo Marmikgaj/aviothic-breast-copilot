@@ -77,19 +77,15 @@ async def validate_upload(*, file: UploadFile, settings: Settings) -> ValidatedF
     if size_bytes > settings.upload_max_bytes:
         max_mb = settings.upload_max_bytes / (1024 * 1024)
         actual_mb = size_bytes / (1024 * 1024)
-        raise FileTooLargeError(
-            f"File size ({actual_mb:.1f} MB) exceeds the maximum allowed size ({max_mb:.0f} MB)."
-        )
+        raise FileTooLargeError(f"File size ({actual_mb:.1f} MB) exceeds the maximum allowed size ({max_mb:.0f} MB).")
 
-    # --- MIME type check ---
     if claimed_mime not in settings.allowed_mime_types:
-        raise UnsupportedMimeTypeError(
-            f"MIME type '{claimed_mime}' is not supported. Allowed types: {', '.join(sorted(settings.allowed_mime_types))}."
-        )
+        allowed = ", ".join(sorted(settings.allowed_mime_types))
+        raise UnsupportedMimeTypeError(f"MIME type '{claimed_mime}' is not supported. Allowed types: {allowed}.")
 
     # --- Magic byte verification (defense against spoofed Content-Type) ---
     expected_magic = _MIME_TO_MAGIC.get(claimed_mime)
-    if expected_magic and not content[:len(expected_magic)].startswith(expected_magic):
+    if expected_magic and not content[: len(expected_magic)].startswith(expected_magic):
         logger.warning(
             "Magic byte mismatch",
             filename=filename,

@@ -14,9 +14,7 @@ logger = get_logger(__name__)
 
 # TNM Staging pattern
 _TNM_STAGE_PATTERN = re.compile(
-    r"\b([pc]?)T(is|[0-4][a-c]?)\b(?:\s*\(.*?\))?\s*"
-    r"(?:([pc]?)N([0-3][a-c]?)\b)?\s*"
-    r"(?:([pc]?)M([01][a-c]?)\b)?",
+    r"\b([pc]?)T(is|[0-4][a-c]?)\b(?:\s*\(.*?\))?\s*" r"(?:([pc]?)N([0-3][a-c]?)\b)?\s*" r"(?:([pc]?)M([01][a-c]?)\b)?",
     re.IGNORECASE,
 )
 
@@ -53,7 +51,7 @@ def parse_tnm_staging(text: str) -> list[TnmEntity]:
         n_stage = f"{n_prefix}N{n_val}" if n_val else None
         m_stage = f"{m_prefix}M{m_val}" if m_val else None
 
-        is_pathological = (t_prefix == "p" or n_prefix == "p" or m_prefix == "p")
+        is_pathological = t_prefix == "p" or n_prefix == "p" or m_prefix == "p"
 
         entities.append(
             TnmEntity(

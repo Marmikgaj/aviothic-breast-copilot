@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from contextvars import ContextVar
-from typing import Any
+from typing import Any, cast
 
 import structlog
 
@@ -21,8 +21,8 @@ correlation_id_ctx: ContextVar[str | None] = ContextVar("correlation_id", defaul
 def _add_correlation_id(
     logger: Any,  # noqa: ANN401
     method_name: str,
-    event_dict: dict[str, Any],
-) -> dict[str, Any]:
+    event_dict: structlog.types.EventDict,
+) -> structlog.types.EventDict:
     """Structlog processor that injects the current correlation ID into log events."""
     cid = correlation_id_ctx.get()
     if cid is not None:
@@ -95,4 +95,4 @@ def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     Returns:
         A bound structlog logger instance.
     """
-    return structlog.get_logger(name)
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(name))

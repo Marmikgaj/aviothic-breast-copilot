@@ -13,7 +13,6 @@ from __future__ import annotations
 import io
 import statistics
 from dataclasses import dataclass
-from typing import Literal
 
 import fitz  # PyMuPDF
 import pytesseract
@@ -132,11 +131,7 @@ def _ocr_page(page: fitz.Page, page_index: int) -> tuple[str, list[float]]:
         return "", []
 
     # Collect confidences for words with valid detections (conf > 0).
-    confidences: list[float] = [
-        float(c)
-        for c in data["conf"]
-        if isinstance(c, (int, float)) and c >= 0
-    ]
+    confidences: list[float] = [float(c) for c in data["conf"] if isinstance(c, (int, float)) and c >= 0]
 
     logger.debug(
         "OCR page processed",

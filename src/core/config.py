@@ -42,6 +42,20 @@ class Settings(BaseSettings):
     # ---------- Environment ----------
     env: Literal["development", "staging", "production"] = "development"
 
+    # ---------- RAG & Vector Store ----------
+    chroma_persist_dir: Path = Path("./data/chromadb")
+    rag_collection_name: str = "breast_oncology_guidelines"
+    rag_top_k: int = 3
+    rag_similarity_threshold: float = 0.3
+
+    # ---------- LLM & Inference Engine ----------
+    llm_api_base: str = "http://localhost:8000/v1"
+    llm_model: str = "qwen-breast-copilot"
+    llm_temperature: float = 0.1
+    llm_max_new_tokens: int = 1024
+    llm_request_timeout: float = 30.0
+    llm_mock_fallback: bool = True
+
     # ---------- Application ----------
     app_name: str = "Aviothic Breast Cancer Report Copilot"
     app_version: str = "0.1.0"

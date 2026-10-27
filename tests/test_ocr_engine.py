@@ -30,9 +30,7 @@ class TestOcrEngine:
 
     @patch("src.ingestion.ocr_engine.pytesseract.image_to_data")
     @patch("src.ingestion.ocr_engine.pytesseract.image_to_string")
-    def test_perform_ocr_returns_ocr_result(
-        self, mock_to_string: MagicMock, mock_to_data: MagicMock
-    ) -> None:
+    def test_perform_ocr_returns_ocr_result(self, mock_to_string: MagicMock, mock_to_data: MagicMock) -> None:
         """perform_ocr should return an OcrResult with correct types."""
         mock_to_string.return_value = "BREAST IMAGING REPORT\nBI-RADS Category 3"
         mock_to_data.return_value = {"conf": [92, 88, 75, 95, 80]}
@@ -49,9 +47,7 @@ class TestOcrEngine:
 
     @patch("src.ingestion.ocr_engine.pytesseract.image_to_data")
     @patch("src.ingestion.ocr_engine.pytesseract.image_to_string")
-    def test_perform_ocr_high_confidence(
-        self, mock_to_string: MagicMock, mock_to_data: MagicMock
-    ) -> None:
+    def test_perform_ocr_high_confidence(self, mock_to_string: MagicMock, mock_to_data: MagicMock) -> None:
         """High word-confidence values should produce a confidence score >= 0.75."""
         mock_to_string.return_value = "Clear readable text from a well-scanned document."
         mock_to_data.return_value = {"conf": [95, 97, 92, 96, 91]}  # mean 94.2 → 0.942
@@ -64,9 +60,7 @@ class TestOcrEngine:
 
     @patch("src.ingestion.ocr_engine.pytesseract.image_to_data")
     @patch("src.ingestion.ocr_engine.pytesseract.image_to_string")
-    def test_perform_ocr_low_confidence(
-        self, mock_to_string: MagicMock, mock_to_data: MagicMock
-    ) -> None:
+    def test_perform_ocr_low_confidence(self, mock_to_string: MagicMock, mock_to_data: MagicMock) -> None:
         """Low word-confidence values should produce a confidence score < 0.5."""
         mock_to_string.return_value = "x@# g4rb!ge t3xt fr0m p00r sc4n"
         mock_to_data.return_value = {"conf": [10, 8, 15, 5, 12]}  # mean 10 → 0.1
@@ -77,9 +71,7 @@ class TestOcrEngine:
         assert result.confidence < 0.5
 
     @patch("src.ingestion.ocr_engine.pytesseract.image_to_string")
-    def test_perform_ocr_raises_ocr_unavailable_when_tesseract_missing(
-        self, mock_to_string: MagicMock
-    ) -> None:
+    def test_perform_ocr_raises_ocr_unavailable_when_tesseract_missing(self, mock_to_string: MagicMock) -> None:
         """OcrUnavailableError must be raised if the Tesseract binary is absent."""
         import pytesseract as _pt
 
@@ -92,9 +84,7 @@ class TestOcrEngine:
 
     @patch("src.ingestion.ocr_engine.pytesseract.image_to_data")
     @patch("src.ingestion.ocr_engine.pytesseract.image_to_string")
-    def test_perform_ocr_empty_confidence_list(
-        self, mock_to_string: MagicMock, mock_to_data: MagicMock
-    ) -> None:
+    def test_perform_ocr_empty_confidence_list(self, mock_to_string: MagicMock, mock_to_data: MagicMock) -> None:
         """When no valid confidence values are returned, confidence should be 0.0."""
         mock_to_string.return_value = ""
         mock_to_data.return_value = {"conf": [-1, -1, -1]}  # all invalid

@@ -10,7 +10,6 @@ import pytest
 
 from src.extraction.biomarker_parser import parse_biomarkers
 from src.extraction.birads_parser import parse_birads
-from src.extraction.engine import extract_entities
 from src.extraction.lymph_parser import parse_lymph_nodes
 from src.extraction.tnm_parser import parse_tnm_staging
 from src.extraction.tumor_parser import parse_tumor_dimensions
@@ -77,7 +76,11 @@ class TestBiomarkerParser:
     """Test suite for ER, PR, HER2, Ki-67 biomarker parser."""
 
     def test_parse_er_pr_positive(self) -> None:
-        text = "IMMUNOHISTOCHEMISTRY:\nER: Positive (90% of tumor nuclei, strong intensity)\nPR: Positive (70% of tumor nuclei, moderate intensity)"
+        text = (
+            "IMMUNOHISTOCHEMISTRY:\n"
+            "ER: Positive (90% of tumor nuclei, strong intensity)\n"
+            "PR: Positive (70% of tumor nuclei, moderate intensity)"
+        )
         results = parse_biomarkers(text)
 
         er = next(b for b in results if b.name == "ER")
@@ -114,7 +117,10 @@ class TestTumorParser:
     """Test suite for tumor size and location parser."""
 
     def test_parse_3d_dimensions(self) -> None:
-        text = "LEFT BREAST: In the upper outer quadrant at 10 o'clock position, there is a 1.6 x 1.4 x 1.5 cm irregular mass."
+        text = (
+            "LEFT BREAST: In the upper outer quadrant at 10 o'clock position, "
+            "there is a 1.6 x 1.4 x 1.5 cm irregular mass."
+        )
         results = parse_tumor_dimensions(text)
 
         assert len(results) >= 1

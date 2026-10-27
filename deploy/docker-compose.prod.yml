@@ -1,0 +1,101 @@
+# ============================================================================
+# Aviothic Breast Cancer Report Copilot — Production Docker Compose
+# ============================================================================
+# Complies with PRD §6 & Architecture.md:
+# Isolated, non-root execution, persistent vector store, and vLLM GPU inference service.
+# ============================================================================
+
+version: "3.8"
+
+services:
+  # --------------------------------------------------------------------------
+  # 1. FastAPI Application Service
+  # --------------------------------------------------------------------------
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: aviothic_copilot_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - AVIOTHIC_ENV=production
+      - AVIOTHIC_DEBUG=false
+      - AVIOTHIC_API_KEY=${AVIOTHIC_API_KEY:-prod_secret_key_change_me}
+      - AVIOTHIC_JWT_SECRET=${AVIOTHIC_JWT_SECRET:-jwt_prod_secret_change_me}
+      - AVIOTHIC_VLLM_URL=http://vllm:8000
+      - AVIOTHIC_CHROMA_PERSIST_DIR=/app/data/chroma
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - chroma_data:/app/data/chroma
+      - session_uploads:/app/uploads
+    depends_on:
+      vllm:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 8G
+        reservations:
+          cpus: "1.0"
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - aviothic_net
+
+  # --------------------------------------------------------------------------
+  # 2. vLLM Dedicated GPU Model Serving
+  # --------------------------------------------------------------------------
+  vllm:
+    image: vllm/vllm-openai:latest
+    container_name: aviothic_vllm_service
+    restart: always
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+      - MODEL_NAME=${AVIOTHIC_MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - ../models/fine_tuned:/models/fine_tuned:ro
+    ports:
+      - "8001:8000"
+    command: >
+      --model ${AVIOTHIC_MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}
+      --port 8000
+      --gpu-memory-utilization 0.85
+      --max-model-len 4096
+      --trust-remote-code
+      --disable-log-requests
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - aviothic_net
+
+networks:
+  aviothic_net:
+    driver: bridge
+
+volumes:
+  chroma_data:
+    driver: local
+  session_uploads:
+    driver: local
+  hf_cache:
+    driver: local

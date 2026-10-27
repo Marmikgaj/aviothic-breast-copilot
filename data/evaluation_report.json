@@ -1,0 +1,89 @@
+{
+  "timestamp": "2026-10-27T19:05:30.338458Z",
+  "extraction_eval": {
+    "entity_metrics": {
+      "birads": {
+        "true_positives": 2,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "tnm_staging": {
+        "true_positives": 3,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "biomarkers": {
+        "true_positives": 4,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "tumor_dimensions": {
+        "true_positives": 3,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "lymph_nodes": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      }
+    },
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
+    "macro_f1": 1.0,
+    "total_gold_entities": 13,
+    "total_extracted_entities": 15,
+    "passed_target": true
+  },
+  "hallucination_eval": {
+    "total_turns": 10,
+    "compliant_turns": 10,
+    "hallucination_count": 0,
+    "hallucination_rate": 0.0,
+    "diagnostic_leakage_count": 0,
+    "diagnostic_leakage_rate": 0.0,
+    "disclaimer_presence_rate": 1.0,
+    "passed_target": true
+  },
+  "ingestion_latency": {
+    "operation_name": "Report Ingestion & Extraction",
+    "sample_count": 10,
+    "p50_ms": 1.92,
+    "p90_ms": 2.35,
+    "p95_ms": 2.42,
+    "max_ms": 2.42,
+    "mean_ms": 1.92,
+    "threshold_p95_ms": 30000.0,
+    "passed_target": true
+  },
+  "chat_latency": {
+    "operation_name": "Conversational Turn",
+    "sample_count": 10,
+    "p50_ms": 8.02,
+    "p90_ms": 9.86,
+    "p95_ms": 12.34,
+    "max_ms": 12.34,
+    "mean_ms": 8.7,
+    "threshold_p95_ms": 5000.0,
+    "passed_target": true
+  },
+  "overall_system_passed": true,
+  "metadata": {
+    "version": "1.0.0"
+  }
+}

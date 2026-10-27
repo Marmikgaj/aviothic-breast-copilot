@@ -30,9 +30,7 @@ class TestUploadEndpoint:
         assert "message" in body
 
     @pytest.mark.asyncio
-    async def test_upload_without_auth_returns_401(
-        self, client: AsyncClient, sample_mammography_pdf: bytes
-    ) -> None:
+    async def test_upload_without_auth_returns_401(self, client: AsyncClient, sample_mammography_pdf: bytes) -> None:
         """Upload without API key should be rejected with 401."""
         response = await client.post(
             "/api/v1/upload",
@@ -45,9 +43,7 @@ class TestUploadEndpoint:
         assert body["error"]["code"] == "AUTHENTICATION_ERROR"
 
     @pytest.mark.asyncio
-    async def test_upload_with_wrong_key_returns_401(
-        self, client: AsyncClient, sample_mammography_pdf: bytes
-    ) -> None:
+    async def test_upload_with_wrong_key_returns_401(self, client: AsyncClient, sample_mammography_pdf: bytes) -> None:
         """Upload with wrong API key should be rejected with 401."""
         response = await client.post(
             "/api/v1/upload",
@@ -58,9 +54,7 @@ class TestUploadEndpoint:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_upload_wrong_mime_returns_415(
-        self, client: AsyncClient, auth_headers: dict[str, str]
-    ) -> None:
+    async def test_upload_wrong_mime_returns_415(self, client: AsyncClient, auth_headers: dict[str, str]) -> None:
         """Uploading a non-PDF file should return 415."""
         response = await client.post(
             "/api/v1/upload",
@@ -74,9 +68,7 @@ class TestUploadEndpoint:
         assert body["error"]["code"] == "UNSUPPORTED_MIME_TYPE"
 
     @pytest.mark.asyncio
-    async def test_upload_empty_file_returns_422(
-        self, client: AsyncClient, auth_headers: dict[str, str]
-    ) -> None:
+    async def test_upload_empty_file_returns_422(self, client: AsyncClient, auth_headers: dict[str, str]) -> None:
         """Uploading an empty file should return a validation error."""
         response = await client.post(
             "/api/v1/upload",
@@ -90,9 +82,7 @@ class TestUploadEndpoint:
         assert body["error"]["code"] == "FILE_VALIDATION_ERROR"
 
     @pytest.mark.asyncio
-    async def test_upload_spoofed_mime_returns_422(
-        self, client: AsyncClient, auth_headers: dict[str, str]
-    ) -> None:
+    async def test_upload_spoofed_mime_returns_422(self, client: AsyncClient, auth_headers: dict[str, str]) -> None:
         """A file claiming to be PDF but with wrong magic bytes should be rejected."""
         fake_pdf = b"This is not a PDF but claims to be one"
         response = await client.post(

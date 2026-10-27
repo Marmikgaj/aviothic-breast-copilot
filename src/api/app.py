@@ -6,14 +6,14 @@ routers, and lifespan management.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from src.api.middleware import AuthMiddleware, CorrelationIdMiddleware
-from src.api.routers import health, upload
+from src.api.routers import health, sessions, upload
 from src.core.config import get_settings
 from src.core.exceptions import AviothicError, aviothic_error_handler, unhandled_exception_handler
 from src.core.logging import get_logger, setup_logging
@@ -85,10 +85,11 @@ def create_app() -> FastAPI:
 
     # ---- Exception handlers ----
     app.add_exception_handler(AviothicError, aviothic_error_handler)  # type: ignore[arg-type]
-    app.add_exception_handler(Exception, unhandled_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(Exception, unhandled_exception_handler)
 
     # ---- Routers ----
     app.include_router(health.router)
     app.include_router(upload.router)
+    app.include_router(sessions.router)
 
     return app

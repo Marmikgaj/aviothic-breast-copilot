@@ -95,7 +95,7 @@ async def process_report(*, report_id: str, content: bytes, filename: str) -> Re
     # --- Step 3: Report type classification ---
     try:
         report_type, type_confidence = detect_report_type(cleaned_text)
-    except Exception as exc:
+    except Exception:
         logger.exception("Report type detection failed, defaulting to unknown", report_id=report_id)
         report_type = None
         type_confidence = "low"
@@ -103,7 +103,7 @@ async def process_report(*, report_id: str, content: bytes, filename: str) -> Re
     # --- Step 4: Report date detection ---
     try:
         report_date, date_confidence = detect_report_date(cleaned_text)
-    except Exception as exc:
+    except Exception:
         logger.exception("Report date detection failed", report_id=report_id)
         report_date = None
         date_confidence = "low"
@@ -111,7 +111,7 @@ async def process_report(*, report_id: str, content: bytes, filename: str) -> Re
     # --- Step 5: Clinical Entity Extraction (Phase 3) ---
     try:
         entities = extract_entities(cleaned_text)
-    except Exception as exc:
+    except Exception:
         logger.exception("Clinical entity extraction failed", report_id=report_id)
         entities = None
 

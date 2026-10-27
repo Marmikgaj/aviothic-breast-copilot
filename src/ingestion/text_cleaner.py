@@ -117,6 +117,4 @@ def _remove_repeated_lines(text: str, *, min_occurrences: int = 3) -> str:
 
     logger.debug("Removing repeated lines", count=len(lines_to_remove))
 
-    return "\n".join(
-        line for line in lines if line.strip() not in lines_to_remove
-    )
+    return "\n".join(line for line in lines if line.strip() not in lines_to_remove)

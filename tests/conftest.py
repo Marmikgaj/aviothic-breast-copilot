@@ -6,9 +6,10 @@ All fixtures use synthetic/mock data — no real patient data (Rules.md §2).
 from __future__ import annotations
 
 import os
-from typing import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
 
 import pytest
+from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 # Set test API key before importing application code.
@@ -25,14 +26,14 @@ TEST_API_KEY = "test-api-key-for-testing"
 
 
 @pytest.fixture()
-def app():
+def app() -> FastAPI:
     """Create a fresh FastAPI application for each test."""
     application = create_app()
     return application
 
 
 @pytest.fixture()
-async def client(app) -> AsyncIterator[AsyncClient]:
+async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
     """Async HTTP client wired to the test application."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
@@ -46,7 +47,7 @@ def auth_headers() -> dict[str, str]:
 
 
 @pytest.fixture(autouse=True)
-def _clear_job_store():
+def _clear_job_store() -> Iterator[None]:
     """Clear the in-memory job store before each test."""
     store = get_job_store()
     store.clear()

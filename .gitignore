@@ -34,8 +34,9 @@ env/
 # Fine-tuned model weights — versioned via DVC/artifact storage, not git
 models/
 
-# Raw data — source reports/datasets, gitignored
+# Raw data & local databases — source reports/datasets, gitignored
 data/raw/
+data/chromadb/
 
 # ---------- Document files & uploads ----------
 *.pdf
